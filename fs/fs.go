@@ -137,7 +137,7 @@ func (fs *FileSystem) Remove(s string) error {
 
 // FindFirstRegex returns the first absolute path matching the regex for the given path (absolute/
 // relative)
-func (fs *FileSystem) FindFirstRegex(regex, path string) (string, error) {
+func (fs *FileSystem) FindFirstRegex(path, regex string) (string, error) {
 	// s maybe a dir/file.
 	path = fs.normalizePath(path)
 
@@ -163,15 +163,21 @@ func (fs *FileSystem) FindFirstRegex(regex, path string) (string, error) {
 
 // ListDir lists all the files/dirs in s (relative/abs)
 func (fs *FileSystem) ListDir(s string) ([]*File, []*Dir, error) {
-	s = fs.normalizeDirPath(s)
 	fs.mu.RLock()
 	defer fs.mu.RUnlock()
-	node := fs.findNode(s)
-	if node == nil {
-		return nil, nil, ErrNotFound
+
+	var node *trie.Node
+	if s == "" {
+		node = fs.currentDir.md.node
+	} else {
+		s = fs.normalizeDirPath(s)
+		node = fs.findNode(s)
+		if node == nil {
+			return nil, nil, ErrNotFound
+		}
 	}
 
-	_, nodes, err := fs.trie.ListAtNode(s, node)
+	_, nodes, err := fs.trie.ListAtNode(node)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -220,7 +226,7 @@ func (fs *FileSystem) Read(s string, writer io.Writer) (int64, error) {
 	return file.Read(writer)
 }
 
-// Move moves a file/dir from src to dst. src/dst are relative or absolute.
+// Move moves a file from src to dst. src/dst are relative or absolute.
 func (fs *FileSystem) Move(src, dst string) error {
 	if err := validateName(src); err != nil {
 		return ErrInvalidName
@@ -229,24 +235,30 @@ func (fs *FileSystem) Move(src, dst string) error {
 	if err := validateName(dst); err != nil {
 		return ErrInvalidName
 	}
-	absSrc := fs.normalizePath(src)
-	absDst := fs.normalizePath(dst)
 
 	fs.mu.Lock()
 	defer fs.mu.Unlock()
 	srcNode := fs.findNode(src)
 	if srcNode == nil {
-		return ErrNotFound
+		return fmt.Errorf("%s %w", src, ErrNotFound)
 	}
 
 	dstNode := fs.findNode(dst)
 	if dstNode != nil {
 		// Don't support overwrites
-		return ErrAlreadyExist
+		return fmt.Errorf("%s %w", dst, ErrAlreadyExist)
 	}
 
-	fs.trie.Remove(absSrc)
+	// No-op
+	if srcNode == dstNode {
+		return nil
+	}
+
+	absSrc := fs.normalizePath(src)
+	absDst := fs.normalizePath(dst)
+
 	fs.trie.Add(absDst, srcNode.Meta())
+	fs.trie.Remove(absSrc)
 	return nil
 }
 
@@ -325,7 +337,13 @@ func (fs *FileSystem) normalizePath(path string) string {
 	if fs.isAbs(path) {
 		return path
 	}
-	return fs.currentDir.md.AbsolutePath() + path
+	// Need to avoid adding '/' for root.
+	separator := SeperatorStr
+	if fs.currentDir == fs.root {
+		separator = ""
+	}
+	s := fs.currentDir.md.AbsolutePath() + separator + path
+	return s
 }
 
 // creates a new file at n with relative path

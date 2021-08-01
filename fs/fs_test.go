@@ -6,52 +6,27 @@ import (
 	"testing"
 )
 
-func TestFileSystem_Move(t *testing.T) {
-	// Setup
-	fs, err := createTestFS()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	type args struct {
-		src string
-		dst string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		{"Relative", args{"bar/file1", "file3"}, false},
-		{"Absolute", args{"/bar/file2", "file4"}, false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := fs.Move(tt.args.src, tt.args.dst); (err != nil) != tt.wantErr {
-				t.Errorf("FileSystem.Move() error = %v, wantErr %v", err, tt.wantErr)
-			}
-			if _, err := fs.Read(tt.args.dst, bytes.NewBuffer(nil)); err != nil {
-				t.Errorf("FileSystem.Read() error = %v, wantErr %v", err, nil)
-			}
-		})
-	}
-}
-
 func createTestFS() (*FileSystem, error) {
 	// Create a known file-system with a certain structure
 	fs := New()
-	dirs := []string{"foo/", "/bar/"}
+	dirs := []string{"foo", "/bar"}
 	for _, dir := range dirs {
 		if err := fs.MakeDir(dir); err != nil {
 			return nil, err
 		}
 	}
+	files := []string{"f1", "f2", "f3"}
+	for _, file := range files {
+		if err := fs.NewFile(file); err != nil {
+			return nil, err
+		}
+	}
 
-	if err := fs.ChangeDir("bar/"); err != nil {
+	if err := fs.ChangeDir("bar"); err != nil {
 		return nil, err
 	}
 
-	subDirs := []string{"foo/", "foo2/"}
+	subDirs := []string{"foo", "foo2"}
 	for _, dir := range subDirs {
 		if err := fs.MakeDir(dir); err != nil {
 			return nil, err
@@ -59,7 +34,7 @@ func createTestFS() (*FileSystem, error) {
 	}
 
 	// Let's create some files.
-	files := []string{"file1", "file2"}
+	files = []string{"file1", "file2", "file3"}
 	for _, file := range files {
 		if err := fs.NewFile(file); err != nil {
 			return nil, err
@@ -79,6 +54,42 @@ func createTestFS() (*FileSystem, error) {
 
 }
 
+func TestFileSystem_Move(t *testing.T) {
+	// Setup
+	fs, err := createTestFS()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	type args struct {
+		src string
+		dst string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{"Relative", args{"f1", "/f5"}, false},
+		{"Relative2", args{"bar/file1", "file3"}, false},
+		{"Absolute", args{"/bar/file2", "file4"}, false},
+		{"Absolute2", args{"bar/file3", "/file5"}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := fs.Move(tt.args.src, tt.args.dst); (err != nil) != tt.wantErr {
+				t.Errorf("FileSystem.Move() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if _, err := fs.Read(tt.args.dst, bytes.NewBuffer(nil)); err != nil {
+				t.Errorf("FileSystem.Read() error = %v, wantErr %v", err, nil)
+			}
+			if _, err := fs.Read(tt.args.src, bytes.NewBuffer(nil)); err != ErrNotFound {
+				t.Errorf("FileSystem.Read() error = %v, wantErr %v", err, ErrNotFound)
+			}
+		})
+	}
+}
+
 func TestFileSystem_ListDir(t *testing.T) {
 	// Setup
 	fs, err := createTestFS()
@@ -94,9 +105,9 @@ func TestFileSystem_ListDir(t *testing.T) {
 		expectedDirs  []string
 		expectedFiles []string
 	}{
-		{"Relative", args{"bar"}, []string{"foo", "foo2"}, []string{"file1", "file2"}},
+		{"Relative", args{"bar"}, []string{"foo", "foo2"}, []string{"file1", "file2", "file3"}},
 		{"Abs1", args{"/foo/"}, []string{}, []string{}},
-		{"Abs2", args{"/"}, []string{"bar", "foo"}, []string{}},
+		{"Abs2", args{"/"}, []string{"bar", "foo"}, []string{"f1", "f2", "f3"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -149,9 +160,9 @@ func TestFileSystem_Find(t *testing.T) {
 		expectedDirs  []string
 		expectedFiles []string
 	}{
-		{"Relative", args{"bar"}, []string{"foo", "foo2"}, []string{"file1", "file2"}},
+		{"Relative", args{"bar"}, []string{"foo", "foo2"}, []string{"file1", "file2", "file3"}},
 		{"Abs1", args{"/foo/"}, []string{}, []string{}},
-		{"Abs2", args{"/"}, []string{"bar", "foo"}, []string{}},
+		{"Abs2", args{"/"}, []string{"bar", "foo"}, []string{"f1", "f2", "f3"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
