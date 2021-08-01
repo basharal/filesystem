@@ -123,7 +123,7 @@ func (fs *FileSystem) Remove(s string) error {
 	// We have a directory. We can only remove it after all its content is gone.
 	// It's a bit more complicated to do it Because we need to do a reverse topological sort.
 	// TODO.
-	files, dirs, err := fs.ListDir(s)
+	files, dirs, err := fs.listDir(s)
 	if err != nil {
 		return err
 	}
@@ -165,7 +165,10 @@ func (fs *FileSystem) FindFirstRegex(path, regex string) (string, error) {
 func (fs *FileSystem) ListDir(s string) ([]*File, []*Dir, error) {
 	fs.mu.RLock()
 	defer fs.mu.RUnlock()
+	return fs.listDir(s)
+}
 
+func (fs *FileSystem) listDir(s string) ([]*File, []*Dir, error) {
 	var node *trie.Node
 	if s == "" {
 		node = fs.currentDir.md.node

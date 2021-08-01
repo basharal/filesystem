@@ -9,8 +9,19 @@ This is a toy in-memory filesystem that supports basic operations. It supports t
 - Get/Change current working directory.
 - Creating new directories.
 - Listing directory content.
-- Creating/removing/moving files.
+- Creating/removing/moving files/dirs.
 - Finding files/dirs matching a name and regex.
+
+## Build
+
+- Follow instructions to have Go installed on your system via [official instructions]
+  (https://golang.org/doc/install).
+- Go `cmd/filesystem` and run `go build .`.
+- Run `./filesystem` and get instructions via `./filesystem -help`.
+
+## Documentation
+
+Full package documentation is available here for the [trie](https://pkg.go.dev/github.com/basharal/trie) and [filesystem](https://pkg.go.dev/github.com/basharal/filesystem/fs).
 
 ## Extensions
 
@@ -38,7 +49,8 @@ This is a toy in-memory filesystem that supports basic operations. It supports t
   be used for production since it can overflow the stack.
 - Don't support moving where the destination is a directory, but source is a file.
   Both src/destination need to be files.
-- Lots of cases that should be tested but didn't have time (i.e, ).
+- Lots of cases that should be tested but didn't have time. There are probably bugs.
+- Don't support spaces in paths in the command-line (filesystem supports them though)
 
 ## Possible Extensions
 
