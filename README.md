@@ -14,7 +14,12 @@ This is a toy in-memory filesystem that supports basic operations. It supports t
 
 ## Build
 
-- Follow instructions to have Go installed on your system via [official instructions](https://golang.org/doc/install).
+- Follow instructions to have Go installed on your system via [official instructions]
+  s := f.String()
+  if fullPath {
+  s = f.Path()
+  }
+  (https://golang.org/doc/install).
 - Go `cmd/filesystem` and run `go build .`.
 - Run `./filesystem` and get instructions via `./filesystem -help`.
 
@@ -82,13 +87,13 @@ requests to the right servers. Here are the features:
 - Start/End prefixes for servers must be a single character. It's more complicated to support longer
   prefixes per server because we need to do prefix matching and not just binary search.
 
-## How to run the distributed filesystem?
+## How to run distributed filesystem?
 
 ### Server
 
 - Compile the server by running `go build .` in `cmd/file_server`.
-- Run multiple servers with difference prefixes. Example is as follows:
-  `./file_server -start_prefix=a -end_prefix=n -port=9800 -alsologtostderr`
+- Run multiple servers with difference prefixes. Example is as follows:<br/>
+  `./file_server -start_prefix=a -end_prefix=n -port=9800 -alsologtostderr` <br/>
   `./file_server -start_prefix=n -end_prefix=z -port=9801 -alsologtostderr`
 
 ### Client
