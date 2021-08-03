@@ -33,7 +33,7 @@ func (f *File) Write(reader io.Reader) (int64, error) {
 		return n, err
 	}
 	f.content = buf.Bytes()
-	return n, err
+	return n, nil
 }
 
 // Read reads the file content as a stream and returns the number of bytes read.

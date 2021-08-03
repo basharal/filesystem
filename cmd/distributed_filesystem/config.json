@@ -1,0 +1,6 @@
+{
+  "servers": [
+    { "start_prefix": "a", "end_prefix": "n", "addr_prefix": "127.0.0.1:9800" },
+    { "start_prefix": "n", "end_prefix": "z", "addr_prefix": "127.0.0.1:9801" }
+  ]
+}

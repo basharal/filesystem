@@ -1,0 +1,69 @@
+syntax = "proto3";
+
+option go_package = "github.com/basharal/filesystem/proto/pb_filesystem";
+
+package filesystem;
+
+// Interface exported by the server.
+service FileSever {
+  // Returns the list of files/dirs at path.
+  rpc ListDir(Path) returns (ListResponse) {}
+
+  // Creates a directory at path.
+  rpc MakeDir(Path) returns (StatusResponse) {}
+
+  // Removes a file/dir at path.
+  rpc Remove(Path) returns (StatusResponse) {}
+
+  // Create a file at path.
+  rpc CreateFile(Path) returns (StatusResponse) {}
+
+  // Returns file content as a stream of bytes.
+  rpc ReadFile(Path) returns (stream Payload) {}
+
+  // A client-to-server streaming RPC.
+  //
+  rpc WriteFile(stream FilePayload) returns (StatusResponse) {}
+}
+
+message Path {
+    string path = 1;
+}
+
+enum Status {
+    SUCCESS = 0;
+    FAILURE = 1;
+}
+
+message StatusResponse {
+    Status status = 1;
+    string reason = 2;
+}
+
+message File {
+    string name = 1;
+    string path = 2;
+    int64 size = 3;
+}
+
+message Dir {
+    string name = 1;
+    string path = 2;
+}
+
+
+message ListResponse {
+    repeated File files = 1;
+    repeated Dir dirs = 2;
+}
+
+message Payload {
+    bytes data = 1;
+}
+
+message FilePayload {
+    oneof input {
+        string path = 1;
+        bytes data = 2;
+    }
+}

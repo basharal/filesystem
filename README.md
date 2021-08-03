@@ -14,14 +14,14 @@ This is a toy in-memory filesystem that supports basic operations. It supports t
 
 ## Build
 
-- Follow instructions to have Go installed on your system via [official instructions]
-  (https://golang.org/doc/install).
+- Follow instructions to have Go installed on your system via [official instructions](https://golang.org/doc/install).
 - Go `cmd/filesystem` and run `go build .`.
 - Run `./filesystem` and get instructions via `./filesystem -help`.
 
 ## Documentation
 
-Full package documentation is available here for the [trie](https://pkg.go.dev/github.com/basharal/trie) and [filesystem](https://pkg.go.dev/github.com/basharal/filesystem/fs).
+Full package documentation is available here for the [trie](https://pkg.go.dev/github.com/basharal/trie)
+and [filesystem](https://pkg.go.dev/github.com/basharal/filesystem/fs).
 
 ## Extensions
 
@@ -57,5 +57,43 @@ Full package documentation is available here for the [trie](https://pkg.go.dev/g
 It's really easy to add new functionality, such as permissions...etc. There are clear
 abstractions.
 
-One thing that could be done is to have a distributed in-memory filesystem using this
-filesystem.
+One thing that could be done is to have a distributed in-memory filesystem using this filesystem as
+seen below.
+
+## Distributed Filesystem
+
+Here, we exposed the filesystem as a gRPC server to support a distributed filesystem. The idea is
+that each server is responsible for a range of prefixes [start, end) and the client can send
+requests to the right servers. Here are the features:
+
+### Features
+
+- Support streaming operations. The client and server can read/write files as a stream.
+- Concurrent requests. When the client fans out to multiple servers, they happen in paralle. This
+  can happen during `ls /` for example.
+
+### Limitations
+
+- No server reconnect (don't attempt to reconnect to the server and only connect once).
+- Support a limited set of APIs (i.e., no relative paths or `chdir`).
+- No discovery (client discovers servers via a JSON config file).
+- No coordination. Ideally servers/clients use a distributed store like Zookeeper for locking and
+  discovery.
+- Start/End prefixes for servers must be a single character. It's more complicated to support longer
+  prefixes per server because we need to do prefix matching and not just binary search.
+
+## How to run the distributed filesystem?
+
+### Server
+
+- Compile the server by running `go build .` in `cmd/file_server`.
+- Run multiple servers with difference prefixes. Example is as follows:
+  `./file_server -start_prefix=a -end_prefix=n -port=9800 -alsologtostderr`
+  `./file_server -start_prefix=n -end_prefix=z -port=9801 -alsologtostderr`
+
+### Client
+
+- Compile the server by running `go build .` in `cmd/distributed_filesystem`.
+- Update `config.json` to have the same parameters as `file_server` servers' flags.
+- Run it via `./distributed_filesystem`.
+- You can get supported commands via `./distributed_filesystem -help`.

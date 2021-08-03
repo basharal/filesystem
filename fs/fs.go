@@ -82,7 +82,7 @@ func (fs *FileSystem) MakeDir(s string) error {
 	s = fs.normalizeDirPath(s)
 	fs.mu.Lock()
 	defer fs.mu.Unlock()
-	if fs.isAbs(s) {
+	if IsAbs(s) {
 		return fs.mkdirAtNode(s[1:], fs.root.md.node)
 	}
 	return fs.mkdirAtNode(s, fs.currentDir.md.node)
@@ -193,7 +193,7 @@ func (fs *FileSystem) listDir(s string) ([]*File, []*Dir, error) {
 func (fs *FileSystem) NewFile(s string) error {
 	fs.mu.Lock()
 	defer fs.mu.Unlock()
-	if fs.isAbs(s) {
+	if IsAbs(s) {
 		return fs.newFileAtNode(s[1:], fs.root.md.node)
 	}
 	return fs.newFileAtNode(s, fs.currentDir.md.node)
@@ -283,7 +283,7 @@ func (fs *FileSystem) Find(path, search string) ([]*File, []*Dir, error) {
 	return files, dirs, nil
 }
 
-func (fs *FileSystem) isAbs(s string) bool {
+func (fs *FileSystem) IsAbs(s string) bool {
 	return s != "" && s[0] == Separator
 }
 
@@ -320,7 +320,7 @@ func (fs *FileSystem) mkdirAtNode(path string, n *trie.Node) error {
 
 func (fs *FileSystem) findNode(path string) *trie.Node {
 	node := fs.currentDir.md.node
-	if fs.isAbs(path) {
+	if IsAbs(path) {
 		node = fs.trie.Root()
 	}
 	node, _ = fs.trie.FindAtNode(path, node)
@@ -337,7 +337,7 @@ func (fs *FileSystem) normalizeDirPath(path string) string {
 
 func (fs *FileSystem) normalizePath(path string) string {
 	// TODO: support . and ..
-	if fs.isAbs(path) {
+	if IsAbs(path) {
 		return path
 	}
 	// Need to avoid adding '/' for root.
@@ -395,4 +395,8 @@ func convertNodes(nodes []*trie.Node) ([]*File, []*Dir) {
 	}
 
 	return files, dirs
+}
+
+func IsAbs(s string) bool {
+	return s != "" && s[0] == Separator
 }
