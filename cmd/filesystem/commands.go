@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"sort"
 	"strings"
 
 	"github.com/basharal/filesystem/fs"
@@ -125,33 +124,20 @@ func (c commands) pwd(args []string) error {
 }
 
 func (c commands) printFilesAndDirs(files []*fs.File, dirs []*fs.Dir, fullPath bool) {
-	names := make([]item, 0)
+	// TODO: Sort by name.
 	for _, f := range files {
-		var s string
+		s := f.String()
 		if fullPath {
 			s = f.Path()
-		} else {
-			s = f.String()
 		}
-		names = append(names, item{s, false})
+		fmt.Printf("%d\t%s\n", f.Size(), s)
 	}
 	for _, d := range dirs {
-		var s string
+		s := d.String()
 		if fullPath {
 			s = d.Path()
-		} else {
-			s = d.String()
 		}
-		names = append(names, item{s, true})
-	}
-
-	sort.Sort(itemSlice(names))
-	for _, item := range names {
-		if item.isDir {
-			color.Cyan(item.name)
-		} else {
-			fmt.Println(item.name)
-		}
+		color.Cyan("\t%s\n", s)
 	}
 }
 
