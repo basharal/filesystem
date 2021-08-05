@@ -14,18 +14,13 @@ This is a toy in-memory filesystem that supports basic operations. It supports t
 
 ## Build
 
-- Follow instructions to have Go installed on your system via [official instructions]
-  s := f.String()
-  if fullPath {
-  s = f.Path()
-  }
-  (https://golang.org/doc/install).
+- Follow instructions to have Go installed on your system via [official instructions](https://golang.org/doc/install).
 - Go `cmd/filesystem` and run `go build .`.
 - Run `./filesystem` and get instructions via `./filesystem -help`.
 
 ## Documentation
 
-Full package documentation is available here for the [trie](https://pkg.go.dev/github.com/basharal/trie)
+Full package documentation is available for the [trie](https://pkg.go.dev/github.com/basharal/trie)
 and [filesystem](https://pkg.go.dev/github.com/basharal/filesystem/fs).
 
 ## Extensions
